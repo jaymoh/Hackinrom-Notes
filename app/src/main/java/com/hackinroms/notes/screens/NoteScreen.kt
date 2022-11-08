@@ -1,7 +1,11 @@
 package com.hackinroms.notes.screens
 
+import android.util.Log
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,6 +31,7 @@ import com.hackinroms.notes.components.NoteInputText
 import com.hackinroms.notes.components.OutlinedNoteButton
 import com.hackinroms.notes.data.NotesDataSource
 import com.hackinroms.notes.models.Note
+import com.hackinroms.notes.util.formatDate
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -145,36 +150,46 @@ fun NoteList(
   }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NoteItem(
   modifier: Modifier = Modifier,
   note: Note,
   onNoteItemClicked: (Note) -> Unit,
 ) {
+  val surfaceColor =  if  (isSystemInDarkTheme()) Color.DarkGray else Color.LightGray
+
   Surface(
     modifier = modifier
       .padding(4.dp)
       .clip(RoundedCornerShape(topEnd = 33.dp, bottomStart = 33.dp))
       .fillMaxWidth(),
-    color = Color(0xFFE0E0E0),
+    color = surfaceColor,
     elevation = 4.dp,
   ) {
     Column(
       modifier = modifier
         .padding(horizontal = 14.dp, vertical = 8.dp)
-        .clickable { onNoteItemClicked(note) },
-      horizontalAlignment = Alignment.Start
+        //.clickable { onNoteItemClicked(note) }
+        .combinedClickable(
+          onClick = { onNoteItemClicked(note) },
+          onLongClick = {
+            // Todo: add dropdown menu with edit and delete options
+            Log.d("NoteScreen", "Long Click")
+          }
+        ),
+      horizontalAlignment = Alignment.Start,
     ) {
       Text(
         text = note.title,
-        style = MaterialTheme.typography.subtitle2,
+        style = MaterialTheme.typography.h6,
       )
       Text(
         text = note.content,
         style = MaterialTheme.typography.subtitle1,
       )
       Text(
-        text = note.entryDate.format(DateTimeFormatter.ofPattern("EEE, d MMM yyyy")),
+        text = formatDate(note.entryDate.time),
         // EEE, d MMM yyyy
         style = MaterialTheme.typography.caption,
       )

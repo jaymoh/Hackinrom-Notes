@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -18,7 +19,9 @@ import com.hackinroms.notes.models.Note
 import com.hackinroms.notes.screens.NoteScreen
 import com.hackinroms.notes.screens.NoteViewModel
 import com.hackinroms.notes.ui.theme.HackinromNotesTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -46,7 +49,7 @@ fun MyApp(content: @Composable () -> Unit) {
 
 @Composable
 fun NotesContent(noteViewModel: NoteViewModel = viewModel()) {
-  val notesList = noteViewModel.getNotes()
+  val notesList = noteViewModel.noteList.collectAsState().value
 
   NoteScreen(
     notes = notesList,

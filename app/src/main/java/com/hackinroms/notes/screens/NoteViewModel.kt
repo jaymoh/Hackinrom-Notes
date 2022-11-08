@@ -1,26 +1,51 @@
 package com.hackinroms.notes.screens
 
-import androidx.compose.runtime.mutableStateListOf
+import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.hackinroms.notes.data.NotesDataSource
+import androidx.lifecycle.viewModelScope
 import com.hackinroms.notes.models.Note
+import com.hackinroms.notes.repository.NoteRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class NoteViewModel: ViewModel() {
-  private var noteList = mutableStateListOf<Note>()
+@HiltViewModel
+class NoteViewModel @Inject constructor(private val repository: NoteRepository) : ViewModel() {
+  //private val noteList = mutableStateListOf<Note>()
+
+  private val _noteList = MutableStateFlow<List<Note>>(emptyList())
+  val noteList = _noteList.asStateFlow()
 
   init {
-    noteList.addAll(NotesDataSource().loadNotes())
+    viewModelScope.launch(Dispatchers.IO) {
+      // can have many processes running under this coroutine scope
+      repository
+        .getAllNotes()
+        .distinctUntilChanged()
+        .collect { listOfNotes ->
+          if (listOfNotes.isEmpty()) {
+            Log.d("NoteViewModel", "No notes found")
+          } else {
+            _noteList.value = listOfNotes
+          }
+
+        }
+    }
   }
 
   fun addNote(note: Note) {
-    noteList.add(note)
+    viewModelScope.launch { repository.addNote(note) }
   }
 
   fun removeNote(note: Note) {
-    noteList.remove(note)
+    viewModelScope.launch { repository.removeNote(note) }
   }
 
-  fun getNotes(): List<Note> {
-    return noteList
+  fun updateNote(note: Note) {
+    viewModelScope.launch { repository.updateNote(note) }
   }
 }
